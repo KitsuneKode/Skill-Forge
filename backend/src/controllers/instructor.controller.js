@@ -1,17 +1,29 @@
+// [x]  Checked
+
 const Course = require('../models/course.model');
+const Instructor = require('../models/instructor.model');
+const mongoose = require('mongoose');
 
 exports.getInstructorsCourses = async (req, res) => {
   try {
-    const courses = Course.find({ instructor: req.body.instructorId });
+    const user = req.user;
+
+    const courses = (
+      await Instructor.findOne({ user: user._id }).populate('coursesTaught')
+    )?.coursesTaught;
+
     if (!courses) {
       res.status(404).json({
         message: 'No course found',
       });
     }
     console.log(courses);
-    res.json(courses);
+    return res.json({
+      message: `${courses.length} courses found`,
+      courses,
+    });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Error fetching the courses',
       error,
     });
@@ -20,7 +32,14 @@ exports.getInstructorsCourses = async (req, res) => {
 
 exports.updateCourse = async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ['title', 'description', 'price', 'category'];
+  const allowedUpdates = [
+    'title',
+    'description',
+    'price',
+    'category',
+    'courseImageURL',
+    'status',
+  ];
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
@@ -29,15 +48,20 @@ exports.updateCourse = async (req, res) => {
     return res.status(400).json({ message: 'Invalid updates!' });
   }
   try {
-    const course = await Course.findByIdAndUpdate(req.params.id, ...req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const courseId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
+    const course = await Course.findByIdAndUpdate(
+      courseId,
+      { ...req.body },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
-    res.json({ message: 'Course was updated', course });
+    return res.json({ message: 'Course was updated', course });
   } catch (error) {
     res.status(500).json({
       message: 'Error updating the course',
@@ -48,26 +72,32 @@ exports.updateCourse = async (req, res) => {
 
 exports.deleteCourse = async (req, res) => {
   try {
-    const course = await Course.findByIdAndDelete(req.params.id);
+    const courseId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
+    const course = await Course.findOneAndDelete({ _id: courseId });
+
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
-    res.json({ message: 'Course was deleted', course });
+    return res.json({ message: 'Course was deleted successfully' });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Error deleting the course',
       error,
     });
   }
 };
 
-//TODO
+//TODOS
 
-exports.getInstructorProfile = async (req, res) => {};
-exports.updateInstructorProfile = async (req, res) => {};
-exports.deleteInstructorProfile = async (req, res) => {};
-
-//TODO
+exports.getInstructorProfile = async (req, res) => {
+  return res.json({ message: 'instrutcor Profile' });
+};
+exports.updateInstructorProfile = async (req, res) => {
+  return res.json({ message: 'yet to be implemented' });
+};
+exports.deleteInstructorProfile = async (req, res) => {
+  return res.json({ message: 'yet to be implemented' });
+};
 
 exports.getDashboardStats = async (req, res) => {
   // Implement dashboard statistics logic

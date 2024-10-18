@@ -1,14 +1,21 @@
+//TODO: Add the implementation for the Purchase model
 const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 
 const PurchaseSchema = new Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'learner',
+      required: true,
+      unique: true,
+    },
     course: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Course',
       required: true,
+      unique: true,
     },
     amount: { type: Number, required: true }, // Final price of the course
     //TODO
@@ -34,12 +41,5 @@ const PurchaseSchema = new Schema(
   },
   { timestamps: true }
 );
-
-// PurchaseSchema.pre('save', async function (next) {
-//   if (this.isModified('password')) {
-//     this.password = await bcrypt.hash(this.password, 10);
-//   }
-//   next();
-// });
 
 module.exports = mongoose.model('Purchase', PurchaseSchema);

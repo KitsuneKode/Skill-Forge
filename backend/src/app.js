@@ -1,4 +1,4 @@
-// app.js
+// [x] CHECKED
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -14,10 +14,10 @@ app.use(express.json());
 // app.use(helmet());
 app.use(cors(frontendURL));
 app.use(cookieParser());
+
 app.use('/api/v1/auth', authRoutes);
-// app.use(authenticateToken());
 app.use('/api/v1/learner', learnerRoutes);
-// app.use('/api/v1/instructor', instructorRoutes);
-app.use('/api/v1/course', courseRoutes);
+app.use('/api/v1/courses', courseRoutes);
+app.use('/api/v1/instructor', instructorRoutes);
 
 module.exports = app;

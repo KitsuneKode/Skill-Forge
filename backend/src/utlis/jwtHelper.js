@@ -5,7 +5,7 @@ const {
 } = require('../config/env');
 
 const generateAccessToken = (userId, role) => {
-  return jwt.sign({ userId, role }, accessTokenJWTSecret, { expiresIn: '15m' });
+  return jwt.sign({ userId, role }, accessTokenJWTSecret, { expiresIn: '60m' });
 };
 
 const generateRefreshToken = (userId, role) => {

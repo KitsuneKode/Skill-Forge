@@ -1,3 +1,5 @@
+//[x]  Checked
+
 const { dbURI } = require('./env');
 const mongoose = require('mongoose');
 

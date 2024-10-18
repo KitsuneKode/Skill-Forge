@@ -1,3 +1,4 @@
+//[x]  Checked
 const express = require('express');
 const {
   getAllCourses,
@@ -5,13 +6,26 @@ const {
   enrollInCourse,
   getCourseById,
 } = require('../controllers/course.controller');
+const {
+  authenticateToken,
+  authenticateRole,
+} = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
-//FIXME roleAuth
-router.get('/courses', getAllCourses);
-router.get('/courses/:id', getCourseById);
-router.post('/courses', createCourse);
-router.post('/courses/:id/purchase', enrollInCourse);
+router.get('/', getAllCourses);
+router.get('/:id', getCourseById);
+router.post(
+  '/:id/purchase',
+  authenticateToken,
+  authenticateRole('learner'),
+  enrollInCourse
+);
+router.post(
+  '/',
+  authenticateToken,
+  authenticateRole('instructor'),
+  createCourse
+);
 
 module.exports = router;

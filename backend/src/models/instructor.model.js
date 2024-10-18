@@ -1,10 +1,17 @@
+// [x] CHECKED
+
 const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 
 const InstructorSchema = new Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      unique: true,
+    },
     coursesTaught: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
     bio: {
       type: String,

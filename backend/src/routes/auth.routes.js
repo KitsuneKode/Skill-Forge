@@ -1,22 +1,23 @@
+// [x] CHECKED
+
 const express = require('express');
 const {
   registerUser,
   loginUser,
   logoutUser,
+  temp,
+  refreshToken,
 } = require('../controllers/auth.controller');
-const {
-  authenticateRole,
-  authenticateToken,
-} = require('../middleware/auth.middleware');
+const { authenticateToken, getUser } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
-router.post('/register', registerUser);
+router.post('/signup', getUser, registerUser);
 router.post('/login', loginUser);
-
+router.post('/refresh-token', getUser, refreshToken);
+router.post('/logout', authenticateToken, logoutUser);
 //TODO:
-router.post('/logout', logoutUser);
+router.post('/temp/', temp);
 // router.post('/reset-password', resetPassword);
-// router.post('/refresh-token', refreshToken);
 
 module.exports = router;

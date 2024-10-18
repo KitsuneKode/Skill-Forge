@@ -1,3 +1,5 @@
+//[x]  Checked
+
 const User = require('../models/user.model');
 const Learner = require('../models/learner.model');
 const Instructor = require('../models/instructor.model');
@@ -7,36 +9,71 @@ const {
   generateRefreshToken,
 } = require('../utlis/jwtHelper');
 const { refreshTokenJWTSecret } = require('../config/env');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const registerUser = async (req, res) => {
   try {
-    const user = await User.create({
-      ...req.body,
-    });
+    const role = req.body.role;
+    const user = req.user;
 
-    if (!user) {
-      return res.status(500).json({
-        message: 'Error creating the user',
-      });
+    console.log(user.role);
+    if (req.userStatus === 'existing') {
+      console.log('user.role includes', user.role.includes(role));
+      if (user.role.includes(role)) {
+        console.log('user state', req.userStatus);
+
+        return res
+          .status(400)
+          .json({ message: `User already has a ${role} account` });
+      }
     }
 
-    if (req.body.role === 'learner') {
+    User.findByIdAndUpdate(
+      user._id,
+      { $addToSet: { role: role } }, // Add to the role array if it doesn't already exist
+      { new: true } // Return the updated user document
+    )
+      .then((updatedUser) => {
+        console.log('Updated User:', updatedUser);
+      })
+      .catch((error) => {
+        console.error('Error updating user roles:', error);
+      });
+
+    if (role === 'learner') {
       const learner = await Learner.create({
         user: user._id,
       });
 
       if (!learner) {
+        if (req.userStatus === 'new') {
+          User.findByIdAndDelete(user._id);
+        }
+        if (req.userStatus === 'existing') {
+          User.findByIdAndUpdate(user._id, { $pull: { role } });
+        }
         return res.status(500).json({
           message: 'Error creating the learner',
         });
       }
     }
 
-    if (req.body.role === 'instructor') {
+    if (role === 'instructor') {
+      const expertise = req.body.expertise;
+      const bio = req.body.bio;
       const instructor = await Instructor.create({
         user: user._id,
+        bio,
+        expertise,
       });
       if (!instructor) {
+        if (req.userStatus === 'new') {
+          User.findByIdAndDelete(user._id);
+        }
+        if (req.userStatus === 'existing') {
+          User.findByIdAndUpdate(user._id, { $pull: { role } });
+        }
         return res.status(500).json({
           message: 'Error creating the instructor',
         });
@@ -44,32 +81,37 @@ const registerUser = async (req, res) => {
     }
 
     res.json({
-      message: 'Account created successfully',
+      message: `${
+        role.charAt(0).toUpperCase() + role.slice(1)
+      } Account created successfully`,
     });
   } catch (error) {
+    console.log('error');
     res.status(500).json({
-      message: 'Unexpected error occurred while creating the user',
+      message: 'Unexpected error occurred while creating the Account',
       error,
     });
   }
 };
 
-//
 const loginUser = async (req, res) => {
   try {
     const { email, password, role } = req.body;
 
-    const user = User.findOne({ email });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ error: 'User doesnot exists' });
     }
 
+    console.log('User password', user.role);
     if (!(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Invalid login credentials' });
     }
 
+    console.log('bcrypt done');
+    console.log('userid', user._id);
     if (role === 'learner') {
-      const learner = Learner.findOne({ user: user._id });
+      const learner = await Learner.findOne({ user: user._id });
       if (!learner) {
         return res
           .status(401)
@@ -78,7 +120,7 @@ const loginUser = async (req, res) => {
     }
 
     if (role === 'instructor') {
-      const instructor = Instructor.findOne({ user: user._id });
+      const instructor = await Instructor.findOne({ user: user._id });
       if (!instructor) {
         return res
           .status(401)
@@ -89,20 +131,24 @@ const loginUser = async (req, res) => {
     const accessToken = generateAccessToken(user._id, role);
     const refreshToken = generateRefreshToken(user._id, role);
 
-    const newRefreshToken = await RefreshToken.create({
-      user: user._id,
-      token: refreshToken,
-    });
-
-    if (!newRefreshToken) {
-      return res.status(500).json({ error: 'Error creating refresh token' });
-    }
-
+    console.log('Before new token');
     //  Invalidate (blacklist) previous refresh tokens for this user
     await RefreshToken.updateMany(
       { user: user._id, blacklisted: false, role }, // Find active tokens for this user
       { blacklisted: true } // Mark them as blacklisted
     );
+
+    const newRefreshToken = await RefreshToken.create({
+      user: user._id,
+      token: refreshToken,
+      role: role,
+    });
+
+    console.log('new token', newRefreshToken);
+
+    if (!newRefreshToken) {
+      return res.status(500).json({ error: 'Error creating refresh token' });
+    }
 
     // Send refresh token in an HTTP-only cookie
     res.cookie('refreshToken', refreshToken, {
@@ -113,9 +159,10 @@ const loginUser = async (req, res) => {
     });
 
     // Send access token in the response body
-    res.status(200).json({ accessToken });
+    return res.status(200).json({ accessToken });
   } catch (error) {
-    res.status(500).json({ message: 'Login failed', error });
+    console.error('error', error);
+    return res.status(500).json({ message: 'Login failed', error });
   }
 };
 
@@ -128,9 +175,12 @@ const refreshToken = async (req, res) => {
       return res.status(403).json({ message: 'Refresh token missing' });
     }
 
+    console.log(req.body.role);
     // 2. Check if the refresh token is valid (find it in the database)
     const token = await RefreshToken.findOne({
       token: refreshToken,
+      user: req.user._id,
+      role: req.body.role,
       blacklisted: false,
     });
 
@@ -146,6 +196,7 @@ const refreshToken = async (req, res) => {
         return res.status(403).json({ message: 'Invalid refresh token' });
       }
 
+      console.log(userData);
       // 4. If token is valid, issue a new access token
       const newAccessToken = generateAccessToken(
         userData.userId,
@@ -175,12 +226,28 @@ const logoutUser = async (req, res) => {
       return res.status(404).json({ message: 'Token not found' });
     }
 
-    res
+    // Remove the refresh token cookie
+    res.clearCookie('refreshToken');
+    return res
       .status(200)
       .json({ message: 'Successfully logged out, token blacklisted' });
   } catch (error) {
-    res.status(500).json({ message: 'Logout failed', error });
+    return res.status(500).json({ message: 'Logout failed', error });
   }
+};
+
+//HACK
+const temp = async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  console.log(refreshTokenJWTSecret);
+  jwt.verify(refreshToken, refreshTokenJWTSecret, (err, userData) => {
+    if (err) {
+      console.log(err);
+      return res.status(403).json({ message: 'Invalid refresh token' });
+    }
+    console.log(userData);
+  });
+  return res.status(200).json({ message: 'Token verified' });
 };
 
 module.exports = {
@@ -188,4 +255,5 @@ module.exports = {
   refreshToken,
   loginUser,
   logoutUser,
+  temp,
 };

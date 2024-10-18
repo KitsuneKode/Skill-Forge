@@ -10,7 +10,6 @@ This is the backend for a course-selling platform that allows users to buy and s
 - [Installation](#installation)
 - [Environment Variables](#environment-variables)
 - [Running the Application](#running-the-application)
-- [API Documentation](#api-documentation)
 - [Testing](#testing)
 - [To-Do Features](#to-do-features)
 - [Contributing](#contributing)
@@ -18,14 +17,14 @@ This is the backend for a course-selling platform that allows users to buy and s
 
 ## Features
 
-- **User Authentication**: Users can sign up, log in, log out, and reset their password using JWT tokens.
-- **Role-Based Access**: Different roles like `Student`, `Admin`, and `Content Creator` with specific permissions.
-- **Course Management**: Content Creators can create, update, and delete courses. Users can purchase courses and leave reviews.
-- **Admin Panel**: Admins can manage users, approve courses, and view course sales.
-- **Payment Integration**: Integrated with Stripe for secure payment processing.
-- **Notification System**: Users get notifications on course purchases, promotions, and course completions.
-- **Rate Limiting**: Prevent abuse of the API by limiting the number of requests from a specific IP.
-- **CORS & Security**: Configured CORS to restrict API access and additional User-Agent validation to prevent access from tools like Postman.
+- [x] **User Authentication**: Users can sign up, log in, log out, and reset their password using JWT tokens.
+- [x] **Role-Based Access**: Different roles like `Student`, `Admin`, and `Content Creator` with specific permissions.
+- [x] **Course Management**: Content Creators can create, update, and delete courses. Users can purchase courses and leave reviews.
+- [ ] **Admin Panel**: Admins can manage users, approve courses, and view course sales.
+- [ ] **Payment Integration**: Integrated with Stripe for secure payment processing.
+- [ ] **Notification System**: Users get notifications on course purchases, promotions, and course completions.
+- [ ] **Rate Limiting**: Prevent abuse of the API by limiting the number of requests from a specific IP.
+- [x] **CORS & Security**: Configured CORS to restrict API access and additional User-Agent validation to prevent access from tools like Postman.
 
 ## Technologies
 
@@ -33,11 +32,9 @@ This is the backend for a course-selling platform that allows users to buy and s
 - **Express.js**: Web framework for building APIs.
 - **MongoDB**: NoSQL database for storing users, courses, payments, etc.
 - **JWT (JSON Web Tokens)**: Token-based authentication.
-- **Stripe**: Payment processing.
 - **CORS**: Cross-origin request handling for security.
 - **Rate Limiting**: Prevent excessive requests.
 - **Bcrypt.js**: Password hashing for security.
-- **AWS S3**: File storage for hosting course videos (optional, based on your setup).
 
 ## Project Structure
 
@@ -45,32 +42,26 @@ This is the backend for a course-selling platform that allows users to buy and s
 ├── controllers
 │   ├── authController.js
 │   ├── courseController.js
-│   ├── paymentController.js
-│   ├── reviewController.js
-│   └── userController.js
+│   ├── instructorController.js
+│   └── learnerController.js
 ├── models
 │   ├── User.js
 │   ├── Course.js
-│   ├── Payment.js
-│   ├── Review.js
-│   └── Notification.js
-├── services
-│   ├── authService.js
-│   ├── courseService.js
-│   ├── paymentService.js
-│   ├── reviewService.js
-│   └── notificationService.js
+│   ├── Learner.js
+│   ├── Instructor.js
+│   ├── refresh-tokens.js
+│   ├── PurchasedCourses.js
+│   └── Admin.js
+
+
 ├── middlewares
 │   ├── authMiddleware.js
-│   ├── errorMiddleware.js
-│   ├── rateLimitMiddleware.js
-│   ├── corsMiddleware.js
+
 ├── routes
 │   ├── authRoutes.js
 │   ├── courseRoutes.js
-│   ├── paymentRoutes.js
-│   ├── reviewRoutes.js
-│   └── userRoutes.js
+│   ├── instructorRoutes.js
+│   └── learnerRoutes.js
 ├── config
 │   ├── db.js
 │   └── env.js
@@ -88,8 +79,8 @@ This is the backend for a course-selling platform that allows users to buy and s
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/course-selling-backend.git
-cd course-selling-backend
+git clone https://github.com/kitsunekode/SkillForge.git
+cd SkillForge/backend
 ```
 
 2. Install dependencies:
@@ -104,14 +95,13 @@ Create a `.env` file in the root directory and configure the following environme
 
 ```bash
 # MongoDB
-MONGO_URI=mongodb://localhost:27017/courses
+DB_URI=your_mongodb_uri
 
 # JWT Secret
-JWT_SECRET=your_jwt_secret
+JWT_SECRET_ACCESS_TOKEN=your_jwt_secret
+JWT_SECRET_REFRESH_TOKEN=your_jwt_secret
 
-# Stripe Keys
-STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_PUBLIC_KEY=your_stripe_public_key
+FRONTEND_URL=your_frontend_url
 
 # App Configuration
 PORT=5000
@@ -135,18 +125,29 @@ npm start
 
 The API uses RESTful principles for route design. A few key endpoints:
 
-- **POST** `/api/auth/signup` - Register a new user
-- **POST** `/api/auth/login` - Login for existing users
-- **POST** `/api/courses` - Create a new course (Content Creators only)
-- **GET** `/api/courses` - Get all courses
-- **POST** `/api/payments` - Process payment using Stripe
-- **GET** `/api/users/me` - Get current user profile
+- **POST** `/api/v1/auth/signup` - Register a new user
+- **POST** `/api/v1/auth/login` - Login for existing users
+- **POST** `/api/v1/auth/logout` - Logout the current user
+- **POST** `/api/v1/auth/refresh-token` -  Refresh the user's access token
+~~**POST** `/api/v1/auth/forgot-password` - Request a password reset~~
+~~**POST** `/api/v1/auth/reset-password` - Reset the user's password~~
+- **POST** `/api/v1/courses` - Create a new course (Content Creators only)
+- **GET** `/api/v1/courses` - Get all courses
+- **GET** `/api/v1/courses/:id` - Get courses by id
+- **GET** `/api/v1/courses/:id/purchase` - Purchase a course (Students only)
+- **GET** `/api/v1/learner/courses` - Get current user purchased courses (Students only)
+- **GET** `/api/v1/learner/me` - Get current user profile (Students only)
+- **GET** `/api/v1/instructor/me` - Get current user profile (Content Creators only)
+- **GET** `/api/v1/instructor/courses` - Get courses created by the current user (Content Creators only)
+- **PUT** `/api/v1/courses/:id` -  Update a course (Content Creators only)
+- **DELETE** `/api/v1/courses/:id` -  Delete a course (Content Creators only)
 
-You can use **Swagger** for detailed API documentation.
 
-### Swagger Documentation
+~~You can use **Swagger** for detailed API documentation.~~
 
-You can access the API docs via `/api-docs` if Swagger is set up.
+~~### Swagger Documentation~~
+
+~~You can access the API docs via `/api-docs` if Swagger is set up.~~
 
 ## Testing
 
@@ -157,30 +158,18 @@ npm test
 ```
 
 ### Testing Strategy
+- **Unit Tests Help**: Create a test suite for each service and controller. much appreciated. 
 
-- **Unit Tests**: Cover individual services and controllers.
-- **Integration Tests**: Test interactions between various parts of the application.
-- **End-to-End Tests**: Simulate user interactions and ensure the entire flow works.
+~~ **Unit Tests**: Cover individual services and controllers.~~
+~~ **Integration Tests**: Test interactions between various parts of the application.~~
+~~ **End-to-End Tests**: Simulate user interactions and ensure the entire flow works.~~
 
-## Implemented Features
-
-- [x] User Authentication with JWT (Sign-up, Login, Logout, Password Reset)
-- [x] Role-Based Access Control (Admin, Student, Content Creator)
-- [x] Course Management (Create, Update, Delete, List)
-- [ ] Payment Processing with Stripe
-- [x] Notification System for Purchases, Promotions, and Updates
-- [x] Basic Admin Panel for Managing Courses and Users
-- [x] Rate Limiting and CORS for Security
-- [x] Basic Logging and Error Handling
 
 ## To-Do Features
 
 - [ ] Full Admin Dashboard with advanced analytics and user management
-- [ ] Implement Refund System for Payments
 - [ ] Add Review and Rating System for Courses
 - [ ] Role-Based Dashboard for Content Creators and Admins
-- [ ] Add Subscription Plan and Gamification System
-- [ ] Implement a Recommendation Engine for Courses
 - [ ] Integrate AWS S3 or another cloud storage solution for hosting course videos
 - [ ] Set up email notifications with SendGrid for marketing campaigns
 - [ ] Add advanced logging and monitoring (e.g., using Winston or a monitoring tool like Prometheus)
@@ -193,7 +182,4 @@ Feel free to open a pull request if you'd like to contribute to this project.
 
 This project is licensed under the MIT License.
 ```
-
-### New Sections Added:
-- **Implemented Features**: Lists the features that have been completed.
-- **To-Do Features**: Lists the upcoming features and tasks to be implemented in future versions of the project.
+.
