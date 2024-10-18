@@ -38,6 +38,19 @@ This is the backend for a course-selling platform that allows users to buy and s
 
 ## Project Structure
 
+
+- ####  Picture :
+    
+<div align="center">
+    <img src="./public/Untitled-2024-09-23-1325.png" width="70%" alt="Project Structure">
+</div>
+
+
+<br>
+
+
+- ####  Tree Structure :
+
 ```bash
 ├── controllers
 │   ├── authController.js
