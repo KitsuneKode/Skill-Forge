@@ -162,9 +162,9 @@ npm test
 ### Testing Strategy
 ##### ***Unit Tests Help***: Create a test suite for each service and controller. much appreciated. 
 
-- [ ] **Unit Tests**:~~ Cover individual services and controllers.~~
+- [ ] **Unit Tests**:~~Cover individual services and controllers.~~
 - [ ] **Integration Tests**: ~~Test interactions between various parts of the application.~~
-- [ ] **End-to-End Tests**:~~ Simulate user interactions and ensure the entire flow works.~~
+- [ ] **End-to-End Tests**: ~~Simulate user interactions and ensure the entire flow works.~~
 
 
 ## To-Do Features
