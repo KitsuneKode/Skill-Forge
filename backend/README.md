@@ -33,7 +33,7 @@ This is the backend for a course-selling platform that allows users to buy and s
 - **MongoDB**: NoSQL database for storing users, courses, payments, etc.
 - **JWT (JSON Web Tokens)**: Token-based authentication.
 - **CORS**: Cross-origin request handling for security.
-- **Rate Limiting**: Prevent excessive requests.
+- ~~**Rate Limiting**: Prevent excessive requests.~~
 - **Bcrypt.js**: Password hashing for security.
 
 ## Project Structure
@@ -44,6 +44,7 @@ This is the backend for a course-selling platform that allows users to buy and s
 │   ├── courseController.js
 │   ├── instructorController.js
 │   └── learnerController.js
+│
 ├── models
 │   ├── User.js
 │   ├── Course.js
@@ -52,21 +53,23 @@ This is the backend for a course-selling platform that allows users to buy and s
 │   ├── refresh-tokens.js
 │   ├── PurchasedCourses.js
 │   └── Admin.js
-
-
+│
 ├── middlewares
 │   ├── authMiddleware.js
-
+│
 ├── routes
 │   ├── authRoutes.js
 │   ├── courseRoutes.js
 │   ├── instructorRoutes.js
 │   └── learnerRoutes.js
+│
 ├── config
 │   ├── db.js
 │   └── env.js
+│
 ├── utils
-│   └── tokenUtils.js
+│   └── jwtHelper.js
+│
 ├── .env
 ├── README.md
 ├── package.json
@@ -86,7 +89,7 @@ cd SkillForge/backend
 2. Install dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Environment Variables
@@ -129,12 +132,11 @@ The API uses RESTful principles for route design. A few key endpoints:
 - **POST** `/api/v1/auth/login` - Login for existing users
 - **POST** `/api/v1/auth/logout` - Logout the current user
 - **POST** `/api/v1/auth/refresh-token` -  Refresh the user's access token
-~~**POST** `/api/v1/auth/forgot-password` - Request a password reset~~
-~~**POST** `/api/v1/auth/reset-password` - Reset the user's password~~
+- ~~**POST** `/api/v1/auth/reset-password` - Reset the user's password~~
 - **POST** `/api/v1/courses` - Create a new course (Content Creators only)
 - **GET** `/api/v1/courses` - Get all courses
 - **GET** `/api/v1/courses/:id` - Get courses by id
-- **GET** `/api/v1/courses/:id/purchase` - Purchase a course (Students only)
+- **POST** `/api/v1/courses/:id/purchase` - Purchase a course (Students only)
 - **GET** `/api/v1/learner/courses` - Get current user purchased courses (Students only)
 - **GET** `/api/v1/learner/me` - Get current user profile (Students only)
 - **GET** `/api/v1/instructor/me` - Get current user profile (Content Creators only)
@@ -158,11 +160,11 @@ npm test
 ```
 
 ### Testing Strategy
-- **Unit Tests Help**: Create a test suite for each service and controller. much appreciated. 
+##### ***Unit Tests Help***: Create a test suite for each service and controller. much appreciated. 
 
-~~ **Unit Tests**: Cover individual services and controllers.~~
-~~ **Integration Tests**: Test interactions between various parts of the application.~~
-~~ **End-to-End Tests**: Simulate user interactions and ensure the entire flow works.~~
+- [ ] **Unit Tests**:~~ Cover individual services and controllers.~~
+- [ ] **Integration Tests**: ~~Test interactions between various parts of the application.~~
+- [ ] **End-to-End Tests**:~~ Simulate user interactions and ensure the entire flow works.~~
 
 
 ## To-Do Features
@@ -181,5 +183,7 @@ Feel free to open a pull request if you'd like to contribute to this project.
 ## License
 
 This project is licensed under the MIT License.
-```
-.
+
+## Author
+
+- [Kitsunekode](github.com/kitsunekode)

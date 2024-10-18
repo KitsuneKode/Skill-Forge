@@ -41,57 +41,55 @@ exports.getCourseById = async (req, res) => {
 };
 
 exports.createCourse = async (req, res) => {
-  // try {
-  const { title, description, price, courseImageURL, category, status } =
-    req.body;
+  try {
+    const { title, description, price, courseImageURL, category, status } =
+      req.body;
 
-  const instructor = await Instructor.findOne({ user: req.user._id });
+    const instructor = await Instructor.findOne({ user: req.user._id });
 
-  if (!instructor) {
-    return res.status(404).json({
-      message: 'No instructor found',
+    if (!instructor) {
+      return res.status(404).json({
+        message: 'No instructor found',
+      });
+    }
+    const course = await Course.create({
+      title,
+      description,
+      price,
+      courseImageURL,
+      category,
+      instructor: instructor._id,
+      status,
+      enrolledStudents: [],
     });
-  }
-  console.log('before course creation');
-  const course = await Course.create({
-    title,
-    description,
-    price,
-    courseImageURL,
-    category,
-    instructor: instructor._id,
-    status,
-    enrolledStudents: [],
-  });
-  if (!course) {
+    if (!course) {
+      return res.status(500).json({
+        message: 'Error creating the course',
+      });
+    }
+    await Instructor.findByIdAndUpdate(instructor._id, {
+      $addToSet: { coursesTaught: course._id },
+    })
+      .then((updatedInstructor) => {
+        console.log(
+          'Updated Instructor, added course taught:',
+          updatedInstructor
+        );
+      })
+      .catch((error) => {
+        console.error('Error updating Instructor:', error);
+      });
+
+    return res.json({
+      message: 'Successfully created course',
+      courseId: course._id,
+    });
+  } catch (error) {
     return res.status(500).json({
       message: 'Error creating the course',
+      error,
     });
   }
-  console.log('after course creation');
-  await Instructor.findByIdAndUpdate(instructor._id, {
-    $addToSet: { coursesTaught: course._id },
-  })
-    .then((updatedInstructor) => {
-      console.log(
-        'Updated Instructor, added course taught:',
-        updatedInstructor
-      );
-    })
-    .catch((error) => {
-      console.error('Error updating Instructor:', error);
-    });
-
-  return res.json({
-    message: 'Successfully created course',
-    courseId: course._id,
-  });
-  // } catch (error) {
-  //   return res.status(500).json({
-  //     message: 'Error creating the course',
-  //     error,
-  //   });
-  // }
 };
 
 exports.enrollInCourse = async (req, res) => {

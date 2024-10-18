@@ -8,12 +8,10 @@ const { accessTokenJWTSecret } = require('../config/env');
 const getUser = async (req, res, next) => {
   try {
     const { email } = req.body;
-    console.log('Finding user', email);
     const findUser = await User.findOne({ email }).select('-password');
     if (!findUser) {
       const { firstName, lastName, password, role } = req.body;
 
-      console.log('user not found');
       req.userStatus = 'new';
       const user = await User.create({
         firstName,
@@ -52,9 +50,7 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ message: 'Not authorized, token missing' });
     }
 
-    console.log('Authenticating token');
     const decoded = jwt.verify(token, accessTokenJWTSecret);
-    console.log('Token verified');
     const user = await User.findOne({ _id: decoded.userId }).select(
       '-password'
     );

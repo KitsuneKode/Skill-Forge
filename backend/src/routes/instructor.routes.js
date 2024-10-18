@@ -21,6 +21,13 @@ router.get(
   getInstructorsCourses
 );
 
+router.get(
+  '/me',
+  authenticateToken,
+  authenticateRole('instructor'),
+  getInstructorProfile
+);
+
 router.put(
   '/courses/:id',
   authenticateToken,
@@ -36,7 +43,6 @@ router.delete(
 );
 
 //TODO
-router.get('/profile', getInstructorProfile);
 // router.put('/profile', updateInstructorProfile);
 // router.delete('/profile', deleteInstructorProfile);
 

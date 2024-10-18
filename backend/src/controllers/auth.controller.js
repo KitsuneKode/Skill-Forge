@@ -17,12 +17,8 @@ const registerUser = async (req, res) => {
     const role = req.body.role;
     const user = req.user;
 
-    console.log(user.role);
     if (req.userStatus === 'existing') {
-      console.log('user.role includes', user.role.includes(role));
       if (user.role.includes(role)) {
-        console.log('user state', req.userStatus);
-
         return res
           .status(400)
           .json({ message: `User already has a ${role} account` });
@@ -103,13 +99,10 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ error: 'User doesnot exists' });
     }
 
-    console.log('User password', user.role);
     if (!(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Invalid login credentials' });
     }
 
-    console.log('bcrypt done');
-    console.log('userid', user._id);
     if (role === 'learner') {
       const learner = await Learner.findOne({ user: user._id });
       if (!learner) {
@@ -131,7 +124,6 @@ const loginUser = async (req, res) => {
     const accessToken = generateAccessToken(user._id, role);
     const refreshToken = generateRefreshToken(user._id, role);
 
-    console.log('Before new token');
     //  Invalidate (blacklist) previous refresh tokens for this user
     await RefreshToken.updateMany(
       { user: user._id, blacklisted: false, role }, // Find active tokens for this user
@@ -143,8 +135,6 @@ const loginUser = async (req, res) => {
       token: refreshToken,
       role: role,
     });
-
-    console.log('new token', newRefreshToken);
 
     if (!newRefreshToken) {
       return res.status(500).json({ error: 'Error creating refresh token' });
@@ -175,7 +165,6 @@ const refreshToken = async (req, res) => {
       return res.status(403).json({ message: 'Refresh token missing' });
     }
 
-    console.log(req.body.role);
     // 2. Check if the refresh token is valid (find it in the database)
     const token = await RefreshToken.findOne({
       token: refreshToken,
@@ -196,7 +185,6 @@ const refreshToken = async (req, res) => {
         return res.status(403).json({ message: 'Invalid refresh token' });
       }
 
-      console.log(userData);
       // 4. If token is valid, issue a new access token
       const newAccessToken = generateAccessToken(
         userData.userId,
@@ -216,6 +204,9 @@ const logoutUser = async (req, res) => {
   try {
     const user = req.user; // User to blacklist token for
     const token = req.cookies.refreshToken; // Token to blacklist
+    if (!token) {
+      return res.status(403).json({ message: 'Already logged out' });
+    }
     const refreshToken = await RefreshToken.findOneAndUpdate(
       { user: user._id, token }, // Find the token
       { blacklisted: true }, // Mark as blacklisted

@@ -19,7 +19,14 @@ router.get(
   getPurchasedCourses
 );
 
+router.get(
+  '/me',
+  authenticateToken,
+  authenticateRole('learner'),
+  getLearnerProfile
+);
+
 //TODO
-router.get('/profile', getLearnerProfile);
+// router.put('/me', updateLearnerProfile);
 
 module.exports = router;

@@ -17,7 +17,6 @@ exports.getInstructorsCourses = async (req, res) => {
         message: 'No course found',
       });
     }
-    console.log(courses);
     return res.json({
       message: `${courses.length} courses found`,
       courses,
@@ -87,11 +86,36 @@ exports.deleteCourse = async (req, res) => {
   }
 };
 
-//TODOS
-
 exports.getInstructorProfile = async (req, res) => {
-  return res.json({ message: 'instrutcor Profile' });
+  try {
+    const instructor = await Instructor.findOne({
+      user: req.user._id,
+    }).populate('coursesTaught');
+    if (!instructor) {
+      return res.status(404).json({
+        message: 'Account not found',
+      });
+    }
+
+    const profile = {
+      name: req.user.firstName + ' ' + req.user.lastName,
+      email: req.user.email,
+      expertise: instructor.expertise,
+      bio: instructor.bio,
+      coursesTaught: instructor.coursesTaught.length,
+      courses: instructor.coursesTaught,
+    };
+
+    return res.json({ message: 'Here is your Profile', profile });
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error fetching the instructor profile',
+      error,
+    });
+  }
 };
+
+//TODOS
 exports.updateInstructorProfile = async (req, res) => {
   return res.json({ message: 'yet to be implemented' });
 };
